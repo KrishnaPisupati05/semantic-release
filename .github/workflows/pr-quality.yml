@@ -1,25 +1,29 @@
-name: Quality Checks (Commitlint + ESLint)
+name: PR Quality (Reusable)
 
 on:
   workflow_call:
+    inputs:
+      node-version:
+        type: string
+        default: "20"
+
+permissions:
+  contents: read
 
 permissions:
   contents: read
 
 jobs:
-  quality:
+  commitlint:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout full history
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-
-      - name: Setup Node
-        uses: actions/setup-node@v4
+      - uses: actions/setup-node@v4
         with:
-          node-version: 22
-
+          node-version: ${{ inputs.node-version }}
+          cache: npm
       - name: Install dependencies
         run: |
           if [ -f package-lock.json ]; then
@@ -27,13 +31,32 @@ jobs:
           else
             npm install
           fi
-
       - name: Commitlint (PR commits)
+        if: ${{ github.event_name == 'pull_request' }}
         run: |
-          BASE_SHA="${{ github.event.pull_request.base.sha }}"
-            HEAD_SHA="${{ github.event.pull_request.head.sha }}"
-          echo "Linting commits from $BASE_SHA to $HEAD_SHA"
-          npx commitlint --from "$BASE_SHA" --to "$HEAD_SHA"
+          BASE="${{ github.event.pull_request.base.sha }}"
+          HEAD="${{ github.event.pull_request.head.sha }}"
+          npx commitlint --from "$BASE" --to "$HEAD"
+      - name: Commitlint (push fallback)
+        if: ${{ github.event_name != 'pull_request' }}
+        run: npx commitlint --from HEAD~1 --to HEAD
 
-      - name: ESLint (whole repo)
+  eslint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ inputs.node-version }}
+          cache: npm
+      - name: Install dependencies
+        run: |
+          if [ -f package-lock.json ]; then
+            npm ci
+          else
+            npm install
+          fi
+      - name: ESLint (full repo)
         run: npx eslint . --max-warnings=0
