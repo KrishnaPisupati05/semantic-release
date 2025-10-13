@@ -1,43 +1,36 @@
-name: PR Quality
+name: Quality Checks (Commitlint + ESLint)
+
 on:
-  pull_request:
-    types: [opened, synchronize]
+  workflow_call:
 
 jobs:
-  commitlint:
+  quality:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
+      - name: Checkout full history
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
+
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: 20
-          cache: npm
-      - name: Install deps
+          node-version: 22
+
+      - name: Install dependencies
         run: |
-          if [ -f package-lock.json ]; then npm ci; else npm install; fi
-      - name: Commitlint
+          if [ -f package-lock.json ]; then
+            npm ci
+          else
+            npm install
+          fi
+
+      - name: Commitlint (PR commits)
         run: |
           BASE_SHA="${{ github.event.pull_request.base.sha }}"
-          HEAD_SHA="${{ github.event.pull_request.head.sha }}"
-          echo "Validating commits from $BASE_SHA to $HEAD_SHA"
+            HEAD_SHA="${{ github.event.pull_request.head.sha }}"
+          echo "Linting commits from $BASE_SHA to $HEAD_SHA"
           npx commitlint --from "$BASE_SHA" --to "$HEAD_SHA"
 
-  eslint:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-      - name: Setup Node
-        uses: actions/setup-node@v4
-        with:
-          node-version: 20
-          cache: npm
-      - name: Install deps
-        run: |
-          if [ -f package-lock.json ]; then npm ci; else npm install; fi
-      - name: ESLint
-        run: npx eslint .
+      - name: ESLint (whole repo)
+        run: npx eslint . --max-warnings=0
