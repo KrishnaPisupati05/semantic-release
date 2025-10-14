@@ -1,4 +1,4 @@
-name: PR Quality
+name: PR quality
 
 on:
   pull_request:
