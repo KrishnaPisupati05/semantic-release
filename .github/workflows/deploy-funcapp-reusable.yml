@@ -1,0 +1,103 @@
+name: Reusable Deploy Function App
+
+on:
+  workflow_call:
+    inputs:
+      function_app_name:
+        type: string
+        required: true
+      resource_group:
+        type: string
+        required: false
+        default: ""
+      app_version:
+        type: string
+        required: true
+      working_directory:
+        type: string
+        required: true
+      node_version:
+        type: string
+        required: false
+        default: "20.x"
+      set_app_setting:
+        type: boolean
+        required: false
+        default: false
+      use_publish_profile:
+        type: boolean
+        required: false
+        default: true
+    secrets:
+      AZURE_FUNCTIONAPP_PUBLISH_PROFILE:
+        required: false
+      AZURE_CREDENTIALS:
+        required: false
+
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    env:
+      RAW_VERSION: ${{ inputs.app_version }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Normalize Version (strip leading v)
+        id: version
+        run: |
+          V="${RAW_VERSION}"
+          V="${V#v}"
+          echo "clean=$V" >> "$GITHUB_OUTPUT"
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ inputs.node_version }}
+          cache: npm
+
+      - name: Install & (optional) Build
+        working-directory: ${{ inputs.working_directory }}
+        run: |
+          if [ -f package.json ]; then
+            npm ci
+            npm run build --if-present
+          fi
+
+      - name: Azure Login (Service Principal JSON)
+        if: ${{ inputs.set_app_setting || inputs.use_publish_profile == false }}
+        uses: azure/login@v2
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Set APP_VERSION (App Setting)
+        if: ${{ inputs.set_app_setting }}
+        uses: azure/appservice-settings@v1
+        with:
+          app-name: ${{ inputs.function_app_name }}
+          resource-group: ${{ inputs.resource_group }}
+          app-settings-json: |
+            [
+              { "name": "APP_VERSION", "value": "${{ steps.version.outputs.clean }}", "slotSetting": false }
+            ]
+
+      - name: Package (zip)
+        run: |
+          cd "${{ inputs.working_directory }}"
+          zip -r ../functionapp.zip . -x "*.git*"
+          ls -lh ../functionapp.zip
+
+      - name: Deploy via Publish Profile
+        if: ${{ inputs.use_publish_profile }}
+        uses: Azure/functions-action@v1
+        with:
+          app-name: ${{ inputs.function_app_name }}
+          package: functionapp.zip
+          publish-profile: ${{ secrets.AZURE_FUNCTIONAPP_PUBLISH_PROFILE }}
+
+      - name: Summary
+        run: |
+          echo "Deployment complete"
+          echo "App: ${{ inputs.function_app_name }}"
+          echo "Version: ${{ steps.version.outputs.clean }}"

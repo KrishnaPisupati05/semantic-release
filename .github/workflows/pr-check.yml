@@ -6,6 +6,6 @@ on:
 
 jobs:
   quality:
-    uses: ./.github/workflows/pr-quality.yml
+    uses: ./.github/workflows/pr-check-reusable.yml
     with:
       node-version: "20"
