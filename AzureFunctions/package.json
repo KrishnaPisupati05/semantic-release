@@ -1,0 +1,41 @@
+{
+  "name": "azure-function-nodejs-app",
+  "version": "0.0.0-development",
+  "private": true,
+  "description": "Sample Node.js Azure Function app for testing CI/CD",
+  "engines": {
+    "node": ">=20 <21"
+  },
+  "scripts": {
+    "start": "func start",
+    "dev": "func start --verbose",
+    "build": "echo \"(placeholder build - add tsc or bundler if needed)\"",
+    "lint": "eslint .",
+    "test": "echo \"(placeholder tests - replace with real framework)\"",
+    "release": "semantic-release"
+  },
+  "keywords": [
+    "azure",
+    "function",
+    "nodejs",
+    "serverless"
+  ],
+  "author": "Your Name",
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.18.2",
+    "moment": "^2.29.4"
+  },
+  "devDependencies": {
+    "semantic-release": "^24.2.9",
+    "@semantic-release/commit-analyzer": "^13.0.1",
+    "@semantic-release/release-notes-generator": "^14.1.0",
+    "@semantic-release/changelog": "^6.0.3",
+    "@semantic-release/npm": "^11.0.0",
+    "@semantic-release/git": "^10.0.1",
+    "@semantic-release/github": "^11.0.6",
+    "eslint": "^8.57.0",
+    "@commitlint/cli": "^19.3.0",
+    "@commitlint/config-conventional": "^19.2.2"
+  }
+}
