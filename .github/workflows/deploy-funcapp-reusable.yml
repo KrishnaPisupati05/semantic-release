@@ -72,16 +72,15 @@ jobs:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
 
       - name: Set APP_VERSION (App Setting)
-        if: ${{ inputs.set_app_setting }}
+        if: inputs.set_app_setting == 'true'
         uses: azure/appservice-settings@v1
         with:
           app-name: ${{ inputs.function_app_name }}
-          resource-group: ${{ inputs.resource_group }}
           app-settings-json: |
             [
               { "name": "APP_VERSION", "value": "${{ steps.version.outputs.clean }}", "slotSetting": false }
             ]
-
+            
       - name: Package (zip)
         run: |
           cd "${{ inputs.working_directory }}"
