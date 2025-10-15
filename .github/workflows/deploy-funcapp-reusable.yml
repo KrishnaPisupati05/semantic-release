@@ -21,7 +21,7 @@ on:
         required: false
         default: "20.x"
       set_app_setting:
-        type: boolean
+        type: string
         required: false
         default: false
       use_publish_profile:
@@ -80,7 +80,7 @@ jobs:
             [
               { "name": "APP_VERSION", "value": "${{ steps.version.outputs.clean }}", "slotSetting": false }
             ]
-            
+
       - name: Package (zip)
         run: |
           cd "${{ inputs.working_directory }}"
