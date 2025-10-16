@@ -3,8 +3,12 @@ name: Deploy on Release
 on:
   release:
     types: [published]
+
+permissions:
+  contents: read
+  id-token: write
+  actions: read
             
-  workflow_dispatch:
     inputs:
       tag:
         description: "Tag to deploy (defaults to latest release)"
