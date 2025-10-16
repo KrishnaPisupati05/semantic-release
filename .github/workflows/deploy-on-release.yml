@@ -9,10 +9,10 @@ permissions:
   id-token: write
   actions: read
             
-    inputs:
-      tag:
-        description: "Tag to deploy (defaults to latest release)"
-        required: false
+  inputs:
+    tag:
+      description: "Tag to deploy (defaults to latest release)"
+      required: false
 
 permissions:
   contents: read
